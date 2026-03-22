@@ -1,4 +1,12 @@
-fastapi
+cd "/home/Pandora/Téléchargements/files"
+
+# Créer requirements.txt
+echo "fastapi
 uvicorn
 yfinance
-pandas
+pandas" > requirements.txt
+
+# Initialiser le repo
+git init
+git add backend_main.py requirements.txt pea_tracker_primevue.html
+git commit -m "Initial commit"
