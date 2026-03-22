@@ -282,7 +282,7 @@
       Réessayer
     </button>
     <div style="font-size:0.75rem;color:#8b949e;max-width:400px;text-align:center">
-      Assurez-vous que le backend FastAPI tourne sur <code>const API = 'https://pea-tracker-primevue.onrender.com';</code>
+      Assurez-vous que le backend FastAPI tourne sur <code>http://localhost:8000</code>
     </div>
   </div>
 
@@ -660,6 +660,7 @@ createApp({
         data.value = await res.json();
         lastRefresh.value = new Date().toLocaleTimeString('fr-FR');
         await nextTick();
+        await new Promise(r => setTimeout(r, 50));
         buildCharts();
       } catch (e) {
         error.value = `Impossible de joindre le backend : ${e.message}`;
