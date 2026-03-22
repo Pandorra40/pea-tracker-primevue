@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PEA Tracker — Objectif 5 ans</title>
+
+  <!-- PrimeVue CDN Stack -->
+  <link rel="stylesheet" href="https://unpkg.com/primevue/resources/themes/aura-dark-teal/theme.css" />
+  <link rel="stylesheet" href="https://unpkg.com/primevue/resources/primevue.min.css" />
+  <link rel="stylesheet" href="https://unpkg.com/primeicons/primeicons.css" />
+  <link rel="stylesheet" href="https://unpkg.com/primeflex/primeflex.css" />
+
+  <!-- Chart.js for performance chart -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Vue 3 + PrimeVue CDN -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://unpkg.com/primevue/umd/primevue.min.js"></script>
+  <script src="https://unpkg.com/@primevue/themes/umd/aura.js"></script>
+
+  <style>
+    :root {
+      --font-mono: 'Courier New', monospace;
+    }
+
+    body {
+      margin: 0;
+      background: #0d1117;
+      color: #e6edf3;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    #app {
+      min-height: 100vh;
+    }
+
+    /* ── Header ──────────────────────────── */
+    .app-header {
+      background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+      border-bottom: 1px solid #21262d;
+      padding: 1.5rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .app-header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, #58a6ff, #3fb950);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .app-header .subtitle {
+      font-size: 0.8rem;
+      color: #8b949e;
+      margin-top: 2px;
+    }
+
+    /* ── KPI Cards ───────────────────────── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      padding: 1.5rem 2rem 0;
+    }
+    .kpi-card {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .kpi-card:hover {
+      border-color: #58a6ff44;
+      transform: translateY(-2px);
+    }
+    .kpi-card .kpi-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #8b949e;
+      margin-bottom: 0.5rem;
+    }
+    .kpi-card .kpi-value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      color: #e6edf3;
+    }
+    .kpi-card .kpi-delta {
+      font-size: 0.85rem;
+      margin-top: 0.25rem;
+      font-family: var(--font-mono);
+    }
+    .kpi-card .kpi-icon {
+      font-size: 1.4rem;
+      margin-bottom: 0.5rem;
+    }
+    .positive { color: #3fb950; }
+    .negative { color: #f85149; }
+    .accent   { color: #58a6ff; }
+
+    /* ── Main Content ────────────────────── */
+    .main-content {
+      padding: 1.5rem 2rem 2rem;
+    }
+
+    /* ── Chart ───────────────────────────── */
+    .chart-card {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .chart-card h2 {
+      margin: 0 0 1rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .chart-wrapper {
+      position: relative;
+      height: 280px;
+    }
+
+    /* ── Data Table ──────────────────────── */
+    .table-card {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+    .table-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid #21262d;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .table-header h2 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* PrimeVue DataTable overrides */
+    .p-datatable .p-datatable-thead > tr > th {
+      background: #0d1117 !important;
+      border-color: #21262d !important;
+      color: #8b949e !important;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .p-datatable .p-datatable-tbody > tr {
+      background: #161b22 !important;
+    }
+    .p-datatable .p-datatable-tbody > tr:hover {
+      background: #1c2128 !important;
+    }
+    .p-datatable .p-datatable-tbody > tr > td {
+      border-color: #21262d !important;
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+    }
+    .p-datatable .p-datatable-tfoot > tr > td {
+      background: #0d1117 !important;
+      border-color: #30363d !important;
+      font-weight: 700;
+    }
+
+    /* Tag badges */
+    .sector-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      font-family: var(--font-mono);
+    }
+    .badge-Industrie     { background: #1f3a5f; color: #58a6ff; }
+    .badge-Énergie       { background: #3d2b00; color: #f0a000; }
+    .badge-Communication { background: #2d1b69; color: #a78bfa; }
+    .badge-Tech          { background: #0f3d2e; color: #3fb950; }
+    .badge-Santé         { background: #3b1f1f; color: #f85149; }
+
+    /* ── Pie Charts ──────────────────────── */
+    .pie-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .pie-card {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .pie-card h2 {
+      margin: 0 0 1rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .pie-wrapper {
+      position: relative;
+      height: 240px;
+    }
+
+    /* ── Info Banner ─────────────────────── */
+    .info-banner {
+      background: #1c2128;
+      border: 1px solid #21262d;
+      border-left: 3px solid #58a6ff;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.8rem;
+      color: #8b949e;
+      margin-bottom: 1rem;
+    }
+
+    /* ── Loading / Error ─────────────────── */
+    .state-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+      gap: 1rem;
+      color: #8b949e;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #21262d;
+      border-top-color: #58a6ff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Responsive ──────────────────────── */
+    @media (max-width: 768px) {
+      .pie-grid { grid-template-columns: 1fr; }
+      .kpi-grid { grid-template-columns: 1fr 1fr; }
+      .app-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+    }
+
+    /* ── PrimeVue Button override ─────────── */
+    .refresh-btn {
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+
+<div id="app">
+  <!-- ── LOADING ── -->
+  <div v-if="loading" class="state-center">
+    <div class="spinner"></div>
+    <span>Chargement des données marché…</span>
+  </div>
+
+  <!-- ── ERROR ── -->
+  <div v-else-if="error" class="state-center">
+    <i style="font-size:2rem;color:#f85149">⚠</i>
+    <span>{{ error }}</span>
+    <button @click="loadData" style="padding:0.5rem 1rem;background:#21262d;color:#e6edf3;border:1px solid #30363d;border-radius:6px;cursor:pointer">
+      Réessayer
+    </button>
+    <div style="font-size:0.75rem;color:#8b949e;max-width:400px;text-align:center">
+      Assurez-vous que le backend FastAPI tourne sur <code>http://localhost:8000</code>
+    </div>
+  </div>
+
+  <!-- ── MAIN ── -->
+  <template v-else-if="data">
+
+    <!-- Header -->
+    <header class="app-header">
+      <div>
+        <h1>🚀 PEA Tracker</h1>
+        <div class="subtitle">Objectif 5 ans · {{ positions.length }} lignes · Données {{ lastRefresh }}</div>
+      </div>
+      <button
+        @click="refreshData"
+        :disabled="refreshing"
+        style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 1rem;background:#21262d;color:#e6edf3;border:1px solid #30363d;border-radius:8px;cursor:pointer;font-size:0.85rem;transition:background 0.2s"
+        onmouseover="this.style.background='#30363d'"
+        onmouseout="this.style.background='#21262d'"
+      >
+        <span :style="refreshing ? 'display:inline-block;animation:spin 0.8s linear infinite' : ''">⟳</span>
+        {{ refreshing ? 'Actualisation…' : 'Actualiser' }}
+      </button>
+    </header>
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon">💼</div>
+        <div class="kpi-label">Valeur Portefeuille</div>
+        <div class="kpi-value">{{ fmt(resume.total_actuel) }} €</div>
+        <div class="kpi-delta" :class="resume.diff_globale >= 0 ? 'positive' : 'negative'">
+          {{ resume.diff_globale >= 0 ? '+' : '' }}{{ fmt(resume.diff_globale) }} €
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">📈</div>
+        <div class="kpi-label">Plus-value Totale</div>
+        <div class="kpi-value" :class="resume.perf_pct >= 0 ? 'positive' : 'negative'">
+          {{ resume.perf_pct >= 0 ? '+' : '' }}{{ resume.perf_pct.toFixed(2) }} %
+        </div>
+        <div class="kpi-delta" style="color:#8b949e">vs. prix d'achat</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">💰</div>
+        <div class="kpi-label">Dividendes cumulés (5 ans)</div>
+        <div class="kpi-value accent">{{ fmt(resume.div_5ans) }} €</div>
+        <div class="kpi-delta" style="color:#8b949e">revenus passifs estimés</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">🎯</div>
+        <div class="kpi-label">Marge de hausse (Target)</div>
+        <div class="kpi-value positive">+{{ resume.upside_target.toFixed(1) }} %</div>
+        <div class="kpi-delta" style="color:#8b949e">objectif analystes</div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+
+      <!-- Performance Chart -->
+      <div class="chart-card">
+        <h2>📊 Performance Base 100 — 1 An</h2>
+        <div class="chart-wrapper">
+          <canvas ref="chartCanvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Info Banner -->
+      <div class="info-banner">
+        💡 <strong>Target :</strong> prix visé par le consensus analystes.
+        &nbsp;·&nbsp;
+        <strong>PRU Net (5 ans) :</strong> prix de revient après déduction de 5 ans de dividendes estimés.
+        &nbsp;·&nbsp;
+        <strong>YOC :</strong> rendement sur le prix d'achat (yield on cost).
+      </div>
+
+      <!-- Positions Table -->
+      <div class="table-card">
+        <div class="table-header">
+          <h2>📋 Détail & Projection 5 ans</h2>
+        </div>
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse">
+            <thead>
+              <tr>
+                <th style="text-align:left;padding:0.75rem 1rem;background:#0d1117;color:#8b949e;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid #21262d">Action</th>
+                <th style="text-align:right;padding:0.75rem 1rem;background:#0d1117;color:#8b949e;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid #21262d">Secteur</th>
+                <th style="text-align:right;padding:0.75rem 1rem;background:#0d1117;color:#8b949e;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid #21262d">Cours</th>
+                <th style="text-align:right;padding:0.75rem 1rem;background:#0d1117;color:#8b949e;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid #21262d">PRU</th>
+                <th style="text-align:right;padding:0.75rem 1rem;background:#0d1117;color:#8b949e;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid #21262d">+/− val.</th>
+                <th style="text-align:right;padding:0.75rem 1rem;background:#0d1117;color:#8b949e;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid #21262d">Target</th>
+                <th style="text-align:right;padding:0.75rem 1rem;background:#0d1117;color:#8b949e;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid #21262d">Potentiel</th>
+                <th style="text-align:right;padding:0.75rem 1rem;background:#0d1117;color:#8b949e;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid #21262d">Div. 5 ans</th>
+                <th style="text-align:right;padding:0.75rem 1rem;background:#0d1117;color:#8b949e;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid #21262d">PRU Net</th>
+                <th style="text-align:right;padding:0.75rem 1rem;background:#0d1117;color:#8b949e;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid #21262d">YOC</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="p in positions" :key="p.ticker"
+                  style="transition:background 0.15s;cursor:default"
+                  onmouseover="this.style.background='#1c2128'"
+                  onmouseout="this.style.background='transparent'">
+                <td style="padding:0.75rem 1rem;border-bottom:1px solid #21262d;font-weight:600;color:#e6edf3;font-family:var(--font-mono)">
+                  {{ p.nom }}<br>
+                  <span style="color:#8b949e;font-size:0.7rem">{{ p.ticker }} · {{ p.qte }}×</span>
+                </td>
+                <td style="padding:0.75rem 1rem;border-bottom:1px solid #21262d;text-align:right">
+                  <span class="sector-badge" :class="'badge-' + p.secteur">{{ p.secteur }}</span>
+                </td>
+                <td style="padding:0.75rem 1rem;border-bottom:1px solid #21262d;text-align:right;font-family:var(--font-mono)">{{ p.cours.toFixed(2) }} €</td>
+                <td style="padding:0.75rem 1rem;border-bottom:1px solid #21262d;text-align:right;font-family:var(--font-mono);color:#8b949e">{{ p.pru.toFixed(2) }} €</td>
+                <td style="padding:0.75rem 1rem;border-bottom:1px solid #21262d;text-align:right;font-family:var(--font-mono)"
+                    :style="{ color: p.pmv >= 0 ? '#3fb950' : '#f85149' }">
+                  {{ p.pmv >= 0 ? '+' : '' }}{{ p.pmv.toFixed(2) }} €
+                </td>
+                <td style="padding:0.75rem 1rem;border-bottom:1px solid #21262d;text-align:right;font-family:var(--font-mono);color:#58a6ff">
+                  {{ p.target ? p.target.toFixed(2) + ' €' : 'N/A' }}
+                </td>
+                <td style="padding:0.75rem 1rem;border-bottom:1px solid #21262d;text-align:right;font-family:var(--font-mono)"
+                    :style="{ color: p.potentiel >= 0 ? '#3fb950' : '#f85149' }">
+                  {{ p.potentiel ? (p.potentiel >= 0 ? '+' : '') + p.potentiel.toFixed(1) + ' %' : 'N/A' }}
+                </td>
+                <td style="padding:0.75rem 1rem;border-bottom:1px solid #21262d;text-align:right;font-family:var(--font-mono);color:#58a6ff">
+                  {{ p.div5.toFixed(2) }} €
+                </td>
+                <td style="padding:0.75rem 1rem;border-bottom:1px solid #21262d;text-align:right;font-family:var(--font-mono);color:#58a6ff">
+                  {{ p.pru_net.toFixed(2) }} €
+                </td>
+                <td style="padding:0.75rem 1rem;border-bottom:1px solid #21262d;text-align:right;font-family:var(--font-mono);color:#f0a000">
+                  {{ p.yoc.toFixed(2) }} %
+                </td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr style="background:#0d1117;font-weight:700">
+                <td colspan="2" style="padding:0.75rem 1rem;color:#e6edf3;font-size:0.85rem">💰 TOTAL</td>
+                <td style="padding:0.75rem 1rem;text-align:right"></td>
+                <td style="padding:0.75rem 1rem;text-align:right;font-family:var(--font-mono)">{{ fmt(resume.total_achat) }} €</td>
+                <td style="padding:0.75rem 1rem;text-align:right;font-family:var(--font-mono)"
+                    :style="{ color: resume.diff_globale >= 0 ? '#3fb950' : '#f85149' }">
+                  {{ resume.diff_globale >= 0 ? '+' : '' }}{{ fmt(resume.diff_globale) }} €
+                </td>
+                <td style="padding:0.75rem 1rem;text-align:right;font-family:var(--font-mono);color:#58a6ff">
+                  {{ fmt(totalTarget) }} €
+                </td>
+                <td style="padding:0.75rem 1rem;text-align:right;font-family:var(--font-mono);color:#3fb950">
+                  +{{ resume.upside_target.toFixed(1) }} %
+                </td>
+                <td style="padding:0.75rem 1rem;text-align:right;font-family:var(--font-mono);color:#58a6ff">{{ fmt(resume.div_5ans) }} €</td>
+                <td style="padding:0.75rem 1rem;text-align:right;font-family:var(--font-mono);color:#58a6ff">{{ fmt(resume.total_achat - resume.div_5ans) }} €</td>
+                <td style="padding:0.75rem 1rem;text-align:right;font-family:var(--font-mono);color:#f0a000">{{ yocMoyen }} %</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- Pie Charts -->
+      <div class="pie-grid">
+        <div class="pie-card">
+          <h2>🥧 Poids des lignes</h2>
+          <div class="pie-wrapper">
+            <canvas ref="pieLinesCanvas"></canvas>
+          </div>
+        </div>
+        <div class="pie-card">
+          <h2>🏭 Répartition Sectorielle</h2>
+          <div class="pie-wrapper">
+            <canvas ref="pieSectorsCanvas"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </template>
+</div>
+
+<script>
+const { createApp, ref, computed, onMounted, nextTick } = Vue;
+
+const API = 'http://localhost:8000';
+
+// ─── Palette ──────────────────────────────────────────────
+const COLORS = ['#58a6ff','#3fb950','#f0a000','#a78bfa','#f85149','#39d353','#1f6feb','#da3633'];
+
+// ─── Chart.js defaults ────────────────────────────────────
+Chart.defaults.color = '#8b949e';
+Chart.defaults.borderColor = '#21262d';
+Chart.defaults.font.family = "'Segoe UI', system-ui, sans-serif";
+
+createApp({
+  setup() {
+    const loading   = ref(true);
+    const error     = ref(null);
+    const data      = ref(null);
+    const refreshing = ref(false);
+    const lastRefresh = ref('');
+
+    const chartCanvas     = ref(null);
+    const pieLinesCanvas  = ref(null);
+    const pieSectorsCanvas = ref(null);
+
+    let chartInst = null;
+    let pieLinesInst = null;
+    let pieSectorsInst = null;
+
+    // ── Computed ─────────────────────────────────────────
+    const resume    = computed(() => data.value?.resume || {});
+    const positions = computed(() => data.value?.positions || []);
+    const chartData = computed(() => data.value?.chart || []);
+
+    const totalTarget = computed(() =>
+      positions.value.reduce((s, p) => p.target ? s + p.target * p.qte : s, 0)
+    );
+
+    const yocMoyen = computed(() => {
+      const total = resume.value.total_achat;
+      if (!total) return '0.00';
+      const divAn = positions.value.reduce((s, p) => {
+        const v = data.value.positions.find(x => x.ticker === p.ticker);
+        return s; // computed from div5/5
+      }, 0);
+      // Recalculate from div_5ans
+      const yoc = ((resume.value.div_5ans / 5) / total) * 100;
+      return yoc.toFixed(2);
+    });
+
+    // ── Helpers ──────────────────────────────────────────
+    const fmt = (n) => n !== undefined ? Number(n).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—';
+
+    const destroyCharts = () => {
+      if (chartInst)       { chartInst.destroy();       chartInst = null; }
+      if (pieLinesInst)    { pieLinesInst.destroy();    pieLinesInst = null; }
+      if (pieSectorsInst)  { pieSectorsInst.destroy();  pieSectorsInst = null; }
+    };
+
+    const buildCharts = () => {
+      destroyCharts();
+
+      // ── Performance line chart ──────────────────────────
+      const raw = chartData.value;
+      const step = Math.max(1, Math.floor(raw.length / 120)); // max ~120 points
+      const sampled = raw.filter((_, i) => i % step === 0);
+      const labels = sampled.map(d => d.date);
+
+      chartInst = new Chart(chartCanvas.value, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Mon Portefeuille',
+              data: sampled.map(d => d.portefeuille),
+              borderColor: '#58a6ff',
+              backgroundColor: 'rgba(88,166,255,0.08)',
+              borderWidth: 2,
+              pointRadius: 0,
+              tension: 0.3,
+              fill: true,
+            },
+            {
+              label: 'CAC 40',
+              data: sampled.map(d => d.cac40),
+              borderColor: '#8b949e',
+              backgroundColor: 'transparent',
+              borderWidth: 1.5,
+              pointRadius: 0,
+              tension: 0.3,
+              borderDash: [4, 4],
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { labels: { usePointStyle: true, pointStyleWidth: 12 } },
+            tooltip: {
+              backgroundColor: '#161b22',
+              borderColor: '#21262d',
+              borderWidth: 1,
+              callbacks: {
+                label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}`,
+              },
+            },
+          },
+          scales: {
+            x: {
+              grid: { color: '#21262d' },
+              ticks: { maxTicksLimit: 8 },
+            },
+            y: {
+              grid: { color: '#21262d' },
+              ticks: { callback: v => v.toFixed(0) },
+            },
+          },
+        },
+      });
+
+      // ── Pie — par ligne ────────────────────────────────
+      pieLinesInst = new Chart(pieLinesCanvas.value, {
+        type: 'doughnut',
+        data: {
+          labels: positions.value.map(p => p.nom),
+          datasets: [{
+            data: positions.value.map(p => +(p.cours * p.qte).toFixed(2)),
+            backgroundColor: COLORS,
+            borderColor: '#0d1117',
+            borderWidth: 2,
+            hoverOffset: 8,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'right', labels: { boxWidth: 12, padding: 12 } },
+            tooltip: {
+              backgroundColor: '#161b22',
+              borderColor: '#21262d',
+              borderWidth: 1,
+              callbacks: {
+                label: ctx => ` ${ctx.label}: ${ctx.parsed.toFixed(2)} €`,
+              },
+            },
+          },
+        },
+      });
+
+      // ── Pie — par secteur ──────────────────────────────
+      const sectorMap = {};
+      positions.value.forEach(p => {
+        sectorMap[p.secteur] = (sectorMap[p.secteur] || 0) + p.cours * p.qte;
+      });
+      const sectors = Object.keys(sectorMap);
+      const sectorValues = sectors.map(s => +sectorMap[s].toFixed(2));
+
+      pieSectorsInst = new Chart(pieSectorsCanvas.value, {
+        type: 'doughnut',
+        data: {
+          labels: sectors,
+          datasets: [{
+            data: sectorValues,
+            backgroundColor: COLORS.slice(2),
+            borderColor: '#0d1117',
+            borderWidth: 2,
+            hoverOffset: 8,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'right', labels: { boxWidth: 12, padding: 12 } },
+            tooltip: {
+              backgroundColor: '#161b22',
+              borderColor: '#21262d',
+              borderWidth: 1,
+              callbacks: {
+                label: ctx => ` ${ctx.label}: ${ctx.parsed.toFixed(2)} €`,
+              },
+            },
+          },
+        },
+      });
+    };
+
+    // ── Data loading ──────────────────────────────────────
+    const loadData = async () => {
+      try {
+        error.value = null;
+        const res = await fetch(`${API}/api/portfolio`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        data.value = await res.json();
+        lastRefresh.value = new Date().toLocaleTimeString('fr-FR');
+        await nextTick();
+        buildCharts();
+      } catch (e) {
+        error.value = `Impossible de joindre le backend : ${e.message}`;
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    const refreshData = async () => {
+      refreshing.value = true;
+      try {
+        await fetch(`${API}/api/refresh`, { method: 'POST' });
+        await loadData();
+      } finally {
+        refreshing.value = false;
+      }
+    };
+
+    onMounted(loadData);
+
+    return {
+      loading, error, data, refreshing, lastRefresh,
+      chartCanvas, pieLinesCanvas, pieSectorsCanvas,
+      resume, positions, chartData, totalTarget, yocMoyen,
+      fmt, loadData, refreshData,
+    };
+  },
+}).mount('#app');
+</script>
+</body>
+</html>
